@@ -1,5 +1,5 @@
 //import React from 'react';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
@@ -12,26 +12,48 @@ function Square(props) {
 }
 
 function Board() {
-  const [boardSize, setBoardSize] = useState(8);
   const [xIsNext, setXIsNext] = useState(true);
-  const [squares, setSquares] = useState(
-    Array.from(Array(boardSize), () => new Array(boardSize).fill(null))
-  );
+  const [boardInfo, setBoardInfo] = useState({
+    boardSize: 8,
+    squares: Array.from(Array(8), () => new Array(8).fill(null)),
+  });
+  
+  //下記の処理が初回レンダリング後に読みだされる
+  //石の初期配置
+  useEffect(() => {
+    const squareArr = boardInfo.squares.slice();
+    squareArr[3][3] ="X";
+    squareArr[3][4] ="O";
+    squareArr[4][3] ="O";
+    squareArr[4][4] ="X";
+    setBoardInfo({
+      ...boardInfo,
+      squares:squareArr})
+  }, []);
+
+  //石の変更処理
+  
 
   function handleClick(i, j) {
-    const squareArr = squares.slice();
+    const squareArr = boardInfo.squares.slice();
     //if (calculateWinner(squares) || squares[i][j]) {
-    if (squares[i][j]) {
+    if (boardInfo.squares[i][j]) {
       return;
     }
 
     squareArr[i][j] = xIsNext ? "X" : "O";
-    setSquares(squareArr);
+    console.log(boardInfo.squares);
+    setBoardInfo({ ...boardInfo, squares: squareArr });
     setXIsNext(!xIsNext);
   }
 
   function renderSquare(i, j) {
-    return <Square value={squares[i][j]} onClick={() => handleClick(i, j)} />;
+    return (
+      <Square
+        value={boardInfo.squares[i][j]}
+        onClick={() => handleClick(i, j)}
+      />
+    );
   }
 
   function playerLog() {
@@ -46,10 +68,9 @@ function Board() {
   //盤面の作成
   function makeBoard() {
     const list = [];
-    for (let i = 0; i < boardSize; i++) {
-      //一行ごとに、square読みだす
+    for (let i = 0; i < boardInfo.boardSize; i++) {
       const tempList = [];
-      for (let j = 0; j < boardSize; j++) {
+      for (let j = 0; j < boardInfo.boardSize; j++) {
         tempList.push(renderSquare(i, j));
       }
       list.push(<div className="board-row">{tempList}</div>);
@@ -59,15 +80,26 @@ function Board() {
 
   //この更新方法では、盤面を初期設定以上に広げることができない
   //要修正
+  //初回レンダリング時のみ、変数が初期化されるため
+  //下記関数が読みだされる毎に、変数を初期化するように修正
   const changeBoardSize = (e) => {
     e.preventDefault();
-    setBoardSize(e.target.value);
+    setBoardInfo({
+      ...boardInfo,
+      boardSize: e.target.value,
+      ...boardInfo,
+      squares: Array.from(Array(e.target.value), () =>
+        new Array(e.target.value).fill(null)
+      ),
+    });
   };
 
   return (
     <div>
       <form>
-        <input type="number" value={boardSize} onChange={changeBoardSize} />
+        {/*現在ボードサイズを変更できる機能は使用できない */}
+        {/*<input type="number" value={boardInfo.boardSize} onChange={changeBoardSize} />*/}
+        <input type="number" />
       </form>
 
       <div className="status">
