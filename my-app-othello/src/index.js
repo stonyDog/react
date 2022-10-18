@@ -31,20 +31,23 @@ function Board() {
   const [boardInfo, setBoardInfo] = useState({
     boardSize: 8,
     squares: Array.from(Array(8), () => new Array(8).fill(null)),
+  });
+  const [nextBoardInfo, setNextBoardInfo] = useState({
     changeStoneList: Array.from(new Array(8), () => {
       return Array.from(new Array(8), () => new Array(8).fill(0));
     }),
   });
+  
   const [playerLog, setPlayerLog] = useState("Next player: X");
 
   //初回レンダリング時に実行
   useEffect(() => {
     //石の初期配置
     const squareArr = boardInfo.squares.slice();
-    squareArr[3][4] = "X";
-    squareArr[3][3] = "O";
-    squareArr[4][4] = "O";
-    squareArr[4][3] = "X";
+    squareArr[3][3] = "X";
+    squareArr[3][4] = "O";
+    squareArr[4][3] = "O";
+    squareArr[4][4] = "X";
     setBoardInfo({
       ...boardInfo,
       squares: squareArr,
@@ -53,37 +56,59 @@ function Board() {
 
   //毎レンダリング時に実行
   useEffect(() => {
-    const squareArr = boardInfo.squares.slice();
+    let squareArr = boardInfo.squares.slice();
+    let winner =null;
     //挟まれた石ひっくり返し
-    setBoardInfo({
-      ...boardInfo,
-      squares: changeStone(
-        turnInfo.xIsNext,
-        turnInfo.x_coord,
-        turnInfo.y_coord,
-        squareArr,
-        boardInfo.changeStoneList
-      ),
-    });
+    squareArr = changeStone(
+      turnInfo.xIsNext,
+      turnInfo.x_coord,
+      turnInfo.y_coord,
+      squareArr,
+      nextBoardInfo.changeStoneList
+    );
+    //console.log(squareArr);
 
     //石の変更箇所探索 スキップのチェックも行う
-    const nextBoardInfo = placedNextStones(
+    const nextBoardArr = placedNextStones(
       turnInfo.xIsNext,
       boardInfo.boardSize,
       squareArr
     );
-    // return [squareArr, tempChangeStoneList,oCount,xCount,skipEn];
-
+    //[0]:石を置ける箇所+現在の石リスト、[1]:石を置いた際の変更数リスト、[2]:〇の数、[3]:×の数、[4]スキップEn
+    
 
     //石の変更箇所提示
     setBoardInfo({
       ...boardInfo,
-      squares: nextBoardInfo[0],
-      changeStoneList: nextBoardInfo[1],
+      squares: nextBoardArr[0],
     });
+    setNextBoardInfo({
+      changeStoneList: nextBoardArr[1]
+    });
+    
+    
+    //勝敗判定
+    if(nextBoardArr[2]===0 || nextBoardArr[3]===0 || nextBoardArr[2]+nextBoardArr[3]===boardInfo.boardSize*boardInfo.boardSize ){
+      if(nextBoardArr[3]>nextBoardArr[2]){
+        winner= "X";
+      }else if(nextBoardArr[3]<nextBoardArr[2]){
+        winner= "O";
+      }else{
+        winner= "X and O";
+      }
+    }
+    //スキップ処理判定
+    else if(nextBoardArr[2]!==0 && nextBoardArr[3]!==0 && nextBoardArr[4]===true){
+      //強制ターン変更
+      window.alert('置くことができません。ターンをスキップします')
+      setTurnInfo({
+        ...turnInfo,
+        xIsNext: !turnInfo.xIsNext,
+      });
+    }
 
     //player log生成
-    setPlayerLog(makePlayerLog(calculateWinner(boardInfo.boardSize,squareArr),turnInfo.xIsNext));
+    setPlayerLog(makePlayerLog(winner,turnInfo.xIsNext));
 
   }, [turnInfo.xIsNext, boardInfo.boardSize]);
 
@@ -92,7 +117,7 @@ function Board() {
     const squareArr = boardInfo.squares.slice();
     //if (calculateWinner(squares) || squares[i][j]) {
 
-    //勝敗判定、パス判定の追加
+    //石を置けない箇所に置いた場合は無効
     if (boardInfo.squares[i][j] !== "△") {
       return;
     }
@@ -144,7 +169,7 @@ function Board() {
         new Array(newBoardSize).fill(null)
       ),
     });
-  };
+  };//盤面サイズ変更
 
   return (
     <div>
@@ -227,6 +252,7 @@ function calculateWinner(boardSize,squares) {
 //石のひっくり返し
 function changeStone(xIsNext, x, y, squares, changeStoneList) {
   const squareArr = squares.slice();
+  console.log(squareArr);
   for (let k = 0; k < 8; k++) {
     for (let l = 1; l <= changeStoneList[x][y][k]; l++) {
       squareArr[x + l * checkVector[k][0]][y + l * checkVector[k][1]] = !xIsNext
@@ -234,6 +260,7 @@ function changeStone(xIsNext, x, y, squares, changeStoneList) {
         : "O";
     }
   }
+  console.log(squareArr);
   return squareArr;
 }
 
@@ -245,25 +272,23 @@ function makePlayerLog(winner,xIsNext) {
 }
 //石の変更箇所明示
 function placedNextStones(xIsNext, boardSize, squares) {
-  const squareArr = squares.slice();
   const preSquare = xIsNext ? "O" : "X";
   const nextSquare = xIsNext ? "X" : "O";
   let oCount =0;
   let xCount =0;
   let skipEn =true;
-  // let gameState = 0;//0:ゲーム続行、1:手番skip、2:ゲーム終了
-  let tempChangeStoneList = Array.from(new Array(boardSize), () => {
+  let changeStoneList = Array.from(new Array(boardSize), () => {
     return Array.from(new Array(boardSize), () => new Array(8).fill(0));
   });
 
   for (let i = 0; i < boardSize; i++) {
     for (let j = 0; j < boardSize; j++) {
       //石おける箇所情報の初期化
-      if (squareArr[i][j] === "△") {
-        squareArr[i][j] = null;
+      if (squares[i][j] === "△") {
+        squares[i][j] = null;
       }
       //空欄チェック
-      if (squareArr[i][j] === null) {
+      if (squares[i][j] === null) {
         for (let k = 0; k < 8; k++) {
           let putSquareEn = false;
           let l = 1;
@@ -274,26 +299,19 @@ function placedNextStones(xIsNext, boardSize, squares) {
             j + l * checkVector[k][1] < boardSize
           ) {
             //チェンジできない場合の処理
-            if ( squareArr[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === null ||
-                 squareArr[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === "△" ||
-                (putSquareEn === false && squareArr[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === nextSquare)
-            ) {
+            if ( squares[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === null ||
+                 squares[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === "△" ||
+                (putSquareEn === false && squares[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === nextSquare)) 
+            {
               break;
-            } else if (
-              squareArr[i + l * checkVector[k][0]][
-                j + l * checkVector[k][1]
-              ] === preSquare
-            ) {
+            } else if (squares[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === preSquare) 
+            {
               putSquareEn = true;
-            } else if (
-              putSquareEn === true &&
-              squareArr[i + l * checkVector[k][0]][
-                j + l * checkVector[k][1]
-              ] === nextSquare
-            ) {
-              squareArr[i][j] = "△";
+            } else if (putSquareEn === true && squares[i + l * checkVector[k][0]][j + l * checkVector[k][1]] === nextSquare) 
+            {
+              squares[i][j] = "△";
               skipEn=false;
-              tempChangeStoneList[i][j][k] = l - 1;
+              changeStoneList[i][j][k] = l - 1;
             }
             l++;
           }
@@ -302,36 +320,14 @@ function placedNextStones(xIsNext, boardSize, squares) {
       }
       //石の数をカウント
       else{
-        if (squareArr[i][j] === "O") {
+        if (squares[i][j] === "O") {
           oCount++;
-        }else if(squareArr[i][j] ===  "X"){
+        }else if(squares[i][j] ===  "X"){
           xCount++;
         }
       }
     }
   }
-  return [squareArr, tempChangeStoneList,oCount,xCount,skipEn];
+  return [squares, changeStoneList,oCount,xCount,skipEn];
 }
 
-
-
-/*
-function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-  return null;
-}*/
