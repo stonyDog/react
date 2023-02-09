@@ -1,9 +1,9 @@
-import TodoList from './components/ToDoList';
+import Todo from './components/Todo';
 
 function App() {
   return (
     <div style={{ margin: "2em"}}>
-      <TodoList/>
+      <Todo/>
     </div>
   );
 }
