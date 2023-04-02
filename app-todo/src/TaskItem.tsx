@@ -53,9 +53,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, toggleComplete, delete
       )}
 
       {/* 保存/編集切り替えボタン　クリックでhandleEditが実行 */}
-      <button onClick={handleEdit}>{isEditing ? '保存' : '編集'}</button>
+      <button onClick={handleEdit}  aria-label={isEditing ? 'タスクを保存' : 'タスクを編集'}>
+        {isEditing ? '保存' : '編集'}
+      </button>
       
-      <button onClick={() => deleteTask(task.id)}>削除</button>
+      <button onClick={() => deleteTask(task.id)} aria-label="タスクを削除">
+        削除
+      </button>
+      
     </div>
   );
 };
