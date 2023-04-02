@@ -45,7 +45,7 @@
   },
   "config": {
     "commitizen": {
-      "path": "./app-todo/node_modules/cz-conventional-changelog"
+      "path": "./app-todo/frontend/node_modules/cz-conventional-changelog"
     }
   }
 }
