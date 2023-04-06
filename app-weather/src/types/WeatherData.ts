@@ -15,8 +15,10 @@ export interface Main {
 }
 
 export interface WeatherData {
-  weather: Weather[];
-  name: string;
-  main: Main;
+  weather: string;
+  description: string;
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
   // 必要に応じて他のプロパティも追加できるよ
 }

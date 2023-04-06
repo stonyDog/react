@@ -10,23 +10,15 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ weatherData }) => {
     return <p>データを読み込み中...</p>;
   }
 
-  const { main, name,weather } = weatherData;
-  const cityName = name;
-  const temperature = main.temp;
-  const weatherIcon = weather[0].icon;
-  const weatherDescription = weather[0].description;
-
   return (
     <div>
-      <img
-        src={`http://openweathermap.org/img/wn/${weatherIcon}@2x.png`}
-        alt={weatherDescription}
-        />
-        <p>場所：{cityName}</p>
-        <p>気温：{temperature}℃</p>
-        <p>天気：{weatherDescription}</p>
-      </div>
-    );
+      <p>天気: {weatherData.weather}</p>
+      <p>詳細: {weatherData.description}</p>
+      <p>気温: {weatherData.temperature} ℃</p>
+      <p>湿度: {weatherData.humidity} %</p>
+      <p>風速: {weatherData.windSpeed} m/s</p>
+    </div>
+  );
   };
   
   export default WeatherInfo;
